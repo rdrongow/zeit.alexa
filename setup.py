@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
     name='zeit.alexa',
     url='https://github.com/rdrongow/zeit.alexa',
-    version='0.1dev',
+    version='0.1.dev0',
     author=(
         'Ron Drongowski'
     ),
@@ -14,13 +14,19 @@ setup(
         'ron.drongowski@zeit.de'
     ),
     install_requires=[
-        'zeit.talk>=0.1',
+        'waitress',
+        'zeit.talk>=0.1.dev0',
+        'Flask>=0.12.2',
+        'Flask-Ask>=0.9.7'
     ],
-    description='This package is all about ZEIT ONLINE website delivery.',
+    description='Enable ZEIT ONLINE via Amazon Echo',
     long_description=open('README.md', 'r').read(),
     entry_points={
         'paste.app_factory': [
             'main=zeit.alexa.skill:factory'
+        ],
+        'console_scripts': [
+            'serve=pyramid.scripts.pserve:main'
         ]
     },
     setup_requires=['setuptools_git'],
