@@ -30,6 +30,13 @@ setup(
         ]
     },
     setup_requires=['setuptools_git'],
+    extras_require={
+        'test': [
+            'pytest',
+            'pytest-pep8',
+            'pytest-timeout',
+        ]
+    },
     namespace_packages=['zeit'],
     packages=find_packages('src'),
     package_dir={'': 'src'},

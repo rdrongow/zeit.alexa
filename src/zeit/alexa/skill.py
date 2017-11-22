@@ -13,7 +13,8 @@ def get_headlines():
 @ask.launch
 def start_skill():
     welcome_message = 'Willst du die News wissen?'
-    return question(welcome_message)
+    return question(welcome_message).reprompt(
+        'Sage ja oder nein, wenn du die News wissen willst.')
 
 
 @ask.intent("YesIntent")
