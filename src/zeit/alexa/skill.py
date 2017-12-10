@@ -126,7 +126,7 @@ def yes():
         return question(
             "Ich weiss nicht was Sie meinen. Soll ich den Aufmacher vorlesen?")
     if session.attributes.get(LAST_INTENT, False) == 'lead_story':
-        return statement(read_story(session.attributes[UNIQUE_ID])['ssml'])
+        return read_lead_story()
     if session.attributes[LAST_INTENT] == 'continue_reading' or (
        session.attributes[LAST_INTENT] == 'yes'):
         return read_lead_story()
