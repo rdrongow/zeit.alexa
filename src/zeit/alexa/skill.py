@@ -92,7 +92,7 @@ def read_lead_story():
 
 @ask.intent("ContinueReadingIntent")
 def continue_reading():
-    if not is_story_chunked:
+    if not is_story_chunked():
         session.attributes[LAST_INTENT] = 'continue_reading'
         return question(u"Es gibt gerade keinen Artikel, den ich weiterlesen"
                         u"könnte. Soll ich den Aufmacher vorlesen?")
