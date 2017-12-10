@@ -45,44 +45,57 @@ def lead_story():
     return question(msg)
 
 
+def _strip_tags(xml_str):
+    p = re.compile(r'<.*?>')
+    return p.sub('', xml_str)
+
+
 def maybe_chunk_story(story):
 
     try:
         # Cleanup chunks
-        session.attributes.pop('chunk')
+        session.attributes.pop('chunk_index')
     except KeyError:
         pass
+
+    story = _strip_tags(story)
 
     if len(story) <= 7500:
         return story
 
     # XXX: Maybe preserve SSML
-    p = re.compile(r'<.*?>')
-    story = p.sub('', story)
-
     story_chunk = ''
     if len(story) >= 7500:
         story_chunk = story[7500:]
         story = story[:7500]
 
     if not story.endswith('.') and "." in story_chunk:
-        story = "%s%s" % (story, story_chunk[:story_chunk.index(".")])
-        story_chunk = story_chunk[story_chunk.index("."):]
+        story = "%s%s" % (story, story_chunk[:story_chunk.index(".")+1])
 
     if story_chunk:
-        session.attributes['chunk'] = story_chunk
-
+        prev_index = session.attributes.pop('prev_chunk_index', 0)
+        session.attributes['chunk_index'] = len(story) + prev_index
     return story
 
 
+def story_from_session():
+    if ('chunk_index' in session.attributes.keys() and
+            UNIQUE_ID in session.attribute.keys()):
+        index = session.attributes.pop('chunk_index')
+        story = _strip_tags(read_story(session.attributes[UNIQUE_ID])['ssml'])
+        story = story[index:]
+        session.attributes['prev_chunk_index'] = index
+
+
 def is_story_chunked():
-    return 'chunk' in session.attributes.keys()
+    return 'chunk_index' in session.attributes.keys()
 
 
 @ask.intent("ReadLeadStoryIntent")
 def read_lead_story():
     lead = get_lead_story()
     read = maybe_chunk_story(read_story(lead[UNIQUE_ID])['ssml'])
+    session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
     action = statement
     if is_story_chunked():
         action = question
@@ -97,7 +110,7 @@ def continue_reading():
         return question(u"Es gibt gerade keinen Artikel, den ich weiterlesen"
                         u"könnte. Soll ich den Aufmacher vorlesen?")
 
-    read = maybe_chunk_story(session.attributes['chunk'])
+    read = maybe_chunk_story(story_from_session())
     action = statement
     if is_story_chunked():
         action = question
