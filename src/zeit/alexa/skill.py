@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask, render_template
 from flask_ask import Ask, statement, question, session
 import requests
@@ -92,8 +94,8 @@ def read_lead_story():
 def continue_reading():
     if not is_story_chunked:
         session.attributes[LAST_INTENT] = 'continue_reading'
-        return question("Es gibt gerade keinen Artikel, den ich weiterlesen"
-                        "könnte. Soll ich den Aufmacher vorlesen?")
+        return question(u"Es gibt gerade keinen Artikel, den ich weiterlesen"
+                        u"könnte. Soll ich den Aufmacher vorlesen?")
 
     read = maybe_chunk_story(session.attributes['chunk'])
     action = statement
