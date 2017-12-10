@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from requests import post
+import zeit.alexa.skill
 import copy
 
 
@@ -44,19 +45,19 @@ def _client(request_data):
     return request
 
 
-def _get_text(http_response):
+def _get_text(http_response, mode):
         data = http_response.json()
         return data.get('response', {})\
                    .get('outputSpeech', {})\
-                   .get('text', None)
+                   .get(mode, None)
 
 
-def _get_reprompt(http_response):
+def _get_reprompt(http_response, mode):
         data = http_response.json()
         return data.get('response', {})\
                    .get('reprompt', {})\
                    .get('outputSpeech', {})\
-                   .get('text', None)
+                   .get(mode, None)
 
 
 def test_launch_app(testserver):
@@ -75,25 +76,30 @@ def test_launch_app(testserver):
 
     assert response.ok
 
-    assert _get_text(response) == (
-        'Willst du die News wissen?')
+    assert _get_text(response, 'ssml') == (
+        '')
 
-    assert _get_reprompt(response) == (
+    assert _get_reprompt(response, 'ssml') == (
         'Sage ja oder nein, wenn du die News wissen willst.')
 
 
-def test_yes_intent(testserver):
+def test_lead_story_intent(testserver, monkeypatch):
     request = _client({
         "type": "IntentRequest",
         "intent": {
-            "name": "YesIntent",
+            "name": "lead_story",
             "slots": {}
         }
     })
+
+    def lead():
+        return 'Meine Titel: Meine Unterzeile'
+
+    monkeypatch.setattr(zeit.alexa.skill, 'get_lead_story', lead)
     response = post('{}/{}'.format(
         testserver.url, 'news'), json=request)
 
     assert response.ok
 
-    assert _get_text(response) == (
-        'Die aktuelle...Test headline')
+    assert _get_text(response, 'text') == (
+        'Der Aufmacher ist: Meine Titel: Meine Unterzeile')
