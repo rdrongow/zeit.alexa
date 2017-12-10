@@ -85,6 +85,7 @@ def story_from_session():
         story = _strip_tags(read_story(session.attributes[UNIQUE_ID])['ssml'])
         story = story[index:]
         session.attributes['prev_chunk_index'] = index
+        return story
 
 
 def is_story_chunked():
