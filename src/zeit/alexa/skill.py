@@ -73,7 +73,7 @@ def maybe_chunk_story(story):
     return story
 
 
-def story_is_chunked():
+def is_story_chunked():
     return 'chunk' in session.attributes.keys()
 
 
@@ -82,7 +82,22 @@ def read_lead_story():
     lead = get_lead_story()
     read = maybe_chunk_story(read_story(lead[UNIQUE_ID])['ssml'])
     action = statement
-    if story_is_chunked():
+    if is_story_chunked():
+        action = question
+        read = "%s Weiterlesen? Sagen Sie weiter!" % (read)
+    return action(read)
+
+
+@ask.intent("ContinueReadingIntent")
+def continue_reading():
+    if not is_story_chunked:
+        session.attributes[LAST_INTENT] = 'continue_reading'
+        return question("Es gibt gerade keinen Artikel, den ich weiterlesen"
+                        "könnte. Soll ich den Aufmacher vorlesen?")
+
+    read = maybe_chunk_story(session.attributes['chunk'])
+    action = statement
+    if is_story_chunked():
         action = question
         read = "%s Weiterlesen? Sagen Sie weiter!" % (read)
     return action(read)
@@ -92,6 +107,8 @@ def read_lead_story():
 def yes():
     if session.attributes.get(LAST_INTENT, False) == 'lead_story':
         return statement(read_story(session.attributes[UNIQUE_ID])['ssml'])
+    if session.attributes[LAST_INTENT] == 'continue_reading':
+        return read_lead_story
 
 
 @ask.intent("AMAZON.NoIntent")
