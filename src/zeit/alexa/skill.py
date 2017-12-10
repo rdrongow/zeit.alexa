@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_ask import Ask, statement, question, session
 import requests
+import re
 
 
 app = Flask(__name__,)
@@ -37,10 +38,54 @@ def start_skill():
 def lead_story():
     lead = get_lead_story()
     msg = u'Der Aufmacher ist: {} Soll ich ihn vorlesen?'.format(lead["text"])
-    #msg = u'Der Aufmacher ist: {} Soll ich ihn vorlesen?'.format('Test')
     session.attributes[LAST_INTENT] = "lead_story"
     session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
     return question(msg)
+
+
+def maybe_chunk_story(story):
+
+    try:
+        # Cleanup chunks
+        session.attributes.pop('chunk')
+    except KeyError:
+        pass
+
+    if len(story) <= 7500:
+        return story
+
+    # XXX: Maybe preserve SSML
+    p = re.compile(r'<.*?>')
+    story = p.sub('', story)
+
+    story_chunk = ''
+    if len(story) >= 7500:
+        story_chunk = story[7500:]
+        story = story[:7500]
+
+    if not story.endswith('.') and "." in story_chunk:
+        story = "%s%s" % (story, story_chunk[:story_chunk.index(".")])
+        story_chunk = story_chunk[story_chunk.index("."):]
+
+    if story_chunk:
+        session.attributes['chunk'] = story_chunk
+
+    return story
+
+
+def story_is_chunked():
+    return 'chunk' in session.attributes.keys()
+
+
+@ask.intent("ReadLeadStoryIntent")
+def read_lead_story():
+    lead = get_lead_story()
+    read = maybe_chunk_story(read_story(lead[UNIQUE_ID])['ssml'])
+    action = statement
+    if story_is_chunked():
+        action = question
+        read = "%s Weiterlesen? Sagen Sie weiter!" % (read)
+    return action(read)
 
 
 @ask.intent("AMAZON.YesIntent")
