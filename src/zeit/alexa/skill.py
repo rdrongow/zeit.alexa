@@ -109,8 +109,13 @@ def continue_reading():
 def yes():
     if session.attributes.get(LAST_INTENT, False) == 'lead_story':
         return statement(read_story(session.attributes[UNIQUE_ID])['ssml'])
-    if session.attributes[LAST_INTENT] == 'continue_reading':
-        return read_lead_story
+    if session.attributes[LAST_INTENT] == 'continue_reading' or (
+       session.attributes[LAST_INTENT] == 'yes'):
+        return read_lead_story()
+
+    session.attributes[LAST_INTENT] = 'yes'
+    return question("Ich weiss nicht was Sie meinen. Soll ich den Aufmacher"
+                    "vorlesen?")
 
 
 @ask.intent("AMAZON.NoIntent")
@@ -135,17 +140,17 @@ def breaking_news():
 
 @ask.intent("AMAZON.StopIntent")
 def stop():
-    return ''
+    return statement('Auf bald.')
 
 
 @ask.intent("AMAZON.CancelIntent")
 def cancel():
-    return ''
+    return statement('OK!')
 
 
 @ask.intent("AMAZON.HelpIntent")
 def help():
-    return ''
+    return statement("Hilfe!")
 
 
 def run(global_config, **settings):
