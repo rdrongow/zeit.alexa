@@ -80,7 +80,7 @@ def maybe_chunk_story(story):
 
 def story_from_session():
     if ('chunk_index' in session.attributes.keys() and
-            UNIQUE_ID in session.attribute.keys()):
+            UNIQUE_ID in session.attributes.keys()):
         index = session.attributes.pop('chunk_index')
         story = _strip_tags(read_story(session.attributes[UNIQUE_ID])['ssml'])
         story = story[index:]
