@@ -112,16 +112,24 @@ def lead_story():
     return question(msg)
 
 
-@ask.intent("ReadLeadStoryIntent")
-def read_lead_story():
-    lead = get_lead_story()
-    read = maybe_chunk_story(read_story(lead[UNIQUE_ID])['ssml'])
-    session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
+def read_any_story():
+    unique_id = session.attributes.get(UNIQUE_ID, None)
+    if not unique_id:
+        story = get_lead_story()
+        unique_id = story[UNIQUE_ID]
+    read = maybe_chunk_story(read_story(unique_id)['ssml'])
+    session.attributes[UNIQUE_ID] = unique_id
     action = statement
     if is_story_chunked():
         action = question
         read = "%s Weiterlesen? Sagen Sie weiter!" % (read)
     return action(read)
+
+
+@ask.intent("ReadLeadStoryIntent")
+def read_lead_story():
+    session.attributes.pop(UNIQUE_ID, None)
+    return read_any_story()
 
 
 @ask.intent("ContinueReadingIntent")
@@ -145,9 +153,13 @@ def yes():
     if LAST_INTENT not in session.attributes.keys():
         session.attributes[LAST_INTENT] = 'yes'
         return question(
-            "Ich weiss nicht was Sie meinen. Soll ich den Aufmacher vorlesen?")
-    if session.attributes.get(LAST_INTENT, False) == 'lead_story':
+            "Ich weiss nicht was Sie meinen. "
+            "Soll ich den Leitartikel vorlesen?")
+    if session.attributes[LAST_INTENT] == 'lead_story':
         return read_lead_story()
+    if (session.attributes[LAST_INTENT] == 'next_story' or
+            session.attributes[LAST_INTENT] == 'previous_story'):
+        return read_any_story()
     if session.attributes[LAST_INTENT] == 'continue_reading' or (
        session.attributes[LAST_INTENT] == 'yes'):
         return read_lead_story()
@@ -160,12 +172,20 @@ def no():
 
 @ask.intent("NextStoryIntent")
 def next_story():
-    return statement('not implemented')
+    story = get_next_story(session.attributes[UNIQUE_ID])
+    msg = u'Nächster Artikel: {} Soll ich ihn vorlesen?'.format(story["text"])
+    session.attributes[LAST_INTENT] = "next_story"
+    session.attributes[UNIQUE_ID] = story[UNIQUE_ID]
+    return question(msg)
 
 
 @ask.intent("PreviousStoryIntent")
 def previous_story():
-    return statement('not implemented')
+    story = get_next_story(session.attributes[UNIQUE_ID])
+    msg = u'Voriger Artikel: {} Soll ich ihn vorlesen?'.format(story["text"])
+    session.attributes[LAST_INTENT] = "previous_story"
+    session.attributes[UNIQUE_ID] = story[UNIQUE_ID]
+    return question(msg)
 
 
 @ask.intent("AudioIntent")
