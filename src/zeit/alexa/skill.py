@@ -28,7 +28,7 @@ def _request(action, unique_id=None):
 
 
 def _teaser(action, unique_id=None):
-    return _prepare_statement(_request(action, unique_id=None))
+    return _prepare_statement(_request(action, unique_id))
 
 
 def get_lead_story():
@@ -181,7 +181,7 @@ def next_story():
 
 @ask.intent("PreviousStoryIntent")
 def previous_story():
-    story = get_next_story(session.attributes[UNIQUE_ID])
+    story = get_previous_story(session.attributes[UNIQUE_ID])
     msg = u'Voriger Artikel: {} Soll ich ihn vorlesen?'.format(story["text"])
     session.attributes[LAST_INTENT] = "previous_story"
     session.attributes[UNIQUE_ID] = story[UNIQUE_ID]
