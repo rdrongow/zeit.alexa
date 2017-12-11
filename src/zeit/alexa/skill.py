@@ -106,12 +106,14 @@ def start_skill():
 @ask.intent("LeadStoryIntent")
 def lead_story():
     lead = get_lead_story()
-    msg = u'Der Aufmacher ist: {} Soll ich ihn vorlesen?'.format(lead["text"])
+    msg = (u'Der Aufmacher ist: {} Sagen Sie "vorlesen" '
+           u'oder "nächster"?').format(lead["text"])
     session.attributes[LAST_INTENT] = "lead_story"
     session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
     return question(msg)
 
 
+@ask.intent("ReadAnyStoryIntent")
 def read_any_story():
     unique_id = session.attributes.get(UNIQUE_ID, None)
     if not unique_id:
@@ -173,7 +175,8 @@ def no():
 @ask.intent("NextStoryIntent")
 def next_story():
     story = get_next_story(session.attributes[UNIQUE_ID])
-    msg = u'Nächster Artikel: {} Soll ich ihn vorlesen?'.format(story["text"])
+    msg = (u'Nächster Artikel: {} Sagen Sie "vorlesen" '
+           u'oder "nächster"').format(story["text"])
     session.attributes[LAST_INTENT] = "next_story"
     session.attributes[UNIQUE_ID] = story[UNIQUE_ID]
     return question(msg)
