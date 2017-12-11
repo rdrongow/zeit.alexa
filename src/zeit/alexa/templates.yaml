@@ -1,12 +1,12 @@
 welcome: |
     <speak>
         Willkommen bei ZEIT ONLINE.
-        Sie können "aktueller Aufmacher" sagen und ich lese ihnen 
-        den aktuellen Aufmacher vor. Sagen sie "letzte Eilmeldung",
+        Sie können "Leitartikel" sagen und ich lese ihnen 
+        den ersten Artikel der Homepage vor. Sagen sie "letzte Eilmeldung",
         um die letze Eilmeldung zu hören. Wenn Sie "Audio der Woche"
-        sagen, wird ein aktuelles Audio aus der Zeit vorgelesen.
+        sagen, wird ein aktuelles Audio aus "Die Zeit" vorgelesen.
     </speak>
 
 welcome_reprompt: |
-    Sagen Sie 'aktueller Aufmacher', 'letzte Eilmeldung' oder 
+    Sagen Sie 'Leitartikel', 'letzte Eilmeldung' oder 
     'Audio der Woche'.

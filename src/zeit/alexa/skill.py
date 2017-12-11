@@ -13,36 +13,38 @@ LAST_INTENT = 'last_intent'
 UNIQUE_ID = 'uniqueId'
 
 
-def get_lead_story():
-    req = requests.get('http://{}/lead-story'.format(
-        app.settings['talk_service']))
-    json = req.json()
-    statement = {
+def _prepare_statement(json):
+    return {
         "text": u'{}: {}'.format(json['title'], json['text']),
         UNIQUE_ID: json[UNIQUE_ID]}
-    return statement
+
+
+def _request(action, unique_id=None):
+    params = None
+    if unique_id:
+        params = {"uniqueId": unique_id}
+    return requests.get('http://{}/{}'.format(
+        app.settings['talk_service'], action), params=params).json()
+
+
+def _teaser(action, unique_id=None):
+    return _prepare_statement(_request(action, unique_id=None))
+
+
+def get_lead_story():
+    return _teaser('lead-story', None)
+
+
+def get_next_story(unique_id):
+    return _teaser('next-story', unique_id)
+
+
+def get_previous_story(unique_id):
+    return _teaser('previous-story', unique_id)
 
 
 def read_story(unique_id):
-    req = requests.get('http://{}/read-story'.format(
-        app.settings['talk_service']), params={'uniqueId': unique_id})
-    return req.json()
-
-
-@ask.launch
-def start_skill():
-    welcome_text = render_template('welcome')
-    welcome_reprompt = render_template('welcome_reprompt')
-    return question(welcome_text).reprompt(welcome_reprompt)
-
-
-@ask.intent("LeadStoryIntent")
-def lead_story():
-    lead = get_lead_story()
-    msg = u'Der Aufmacher ist: {} Soll ich ihn vorlesen?'.format(lead["text"])
-    session.attributes[LAST_INTENT] = "lead_story"
-    session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
-    return question(msg)
+    return _request('read-story', unique_id)
 
 
 def _strip_tags(xml_str):
@@ -94,6 +96,22 @@ def is_story_chunked():
     return 'chunk_index' in session.attributes.keys()
 
 
+@ask.launch
+def start_skill():
+    welcome_text = render_template('welcome')
+    welcome_reprompt = render_template('welcome_reprompt')
+    return question(welcome_text).reprompt(welcome_reprompt)
+
+
+@ask.intent("LeadStoryIntent")
+def lead_story():
+    lead = get_lead_story()
+    msg = u'Der Aufmacher ist: {} Soll ich ihn vorlesen?'.format(lead["text"])
+    session.attributes[LAST_INTENT] = "lead_story"
+    session.attributes[UNIQUE_ID] = lead[UNIQUE_ID]
+    return question(msg)
+
+
 @ask.intent("ReadLeadStoryIntent")
 def read_lead_story():
     lead = get_lead_story()
@@ -110,8 +128,9 @@ def read_lead_story():
 def continue_reading():
     if not is_story_chunked():
         session.attributes[LAST_INTENT] = 'continue_reading'
-        return question(u"Es gibt gerade keinen Artikel, den ich weiterlesen"
-                        u"könnte. Soll ich den Aufmacher vorlesen?")
+        return question(u"Es gibt gerade keinen Artikel, den ich weiterlesen "
+                        u"könnte. Soll ich den ersten Artikel der Homepage "
+                        u"vorlesen?")
 
     read = maybe_chunk_story(story_from_session())
     action = statement
@@ -141,6 +160,11 @@ def no():
 
 @ask.intent("NextStoryIntent")
 def next_story():
+    return statement('not implemented')
+
+
+@ask.intent("PreviousStoryIntent")
+def previous_story():
     return statement('not implemented')
 
 
