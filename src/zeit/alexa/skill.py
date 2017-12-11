@@ -47,11 +47,13 @@ def lead_story():
 
 def _strip_tags(xml_str):
     p = re.compile(r'<.*?>')
-    return p.sub('', xml_str)
+    story = p.sub('', xml_str)
+    story = story.replace('\n', ' ').replace('\r', ' ')
+    story = re.sub(' +', ' ', story)
+    return story
 
 
 def maybe_chunk_story(story):
-
     try:
         # Cleanup chunks
         session.attributes.pop('chunk_index')
